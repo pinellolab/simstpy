@@ -23,20 +23,19 @@ def plot_library_size_distribution(data: np.array, params: tuple):
     pdf = sp.stats.lognorm.pdf(x, *params)
 
     # Plot the histogram of the data and the fitted distribution
-    plt.hist(data, bins=100, density=True, alpha=0.5, label='Data')
-    plt.plot(x, pdf, 'r-', label='Log-Norm PDF')
+    plt.hist(data, bins=100, density=True, alpha=0.5, label="Data")
+    plt.plot(x, pdf, "r-", label="Log-Norm PDF")
 
     # Calculate the Kolmogorov-Smirnov test statistic and p-value
-    ks_stat, p_val = sp.stats.kstest(data, 'lognorm', args=params)
+    ks_stat, p_val = sp.stats.kstest(data, "lognorm", args=params)
 
     # Add the test statistic and p-value to the plot
-    text = f'KS stat: {ks_stat:.3f}\np-value: {p_val:.3f}'
-    plt.text(0.6, 0.6, text, transform=plt.gca().transAxes)
+    plt.title(f"KS stat: {ks_stat:.3f}; p-value: {p_val:.3f}")
 
     # Add a legend and axis labels
     plt.legend()
-    plt.xlabel('Value')
-    plt.ylabel('Probability density')
+    plt.xlabel("Value")
+    plt.ylabel("Probability density")
 
     # Show the plot
     plt.show()
@@ -60,20 +59,19 @@ def plot_gene_mean_distribution(data: np.array, params: tuple):
     pdf = sp.stats.gamma.pdf(x, *params)
 
     # Plot the histogram of the data and the fitted distribution
-    plt.hist(mean, bins=100, density=True, alpha=0.5, label='Data')
-    plt.plot(x, pdf, 'r-', label='Gamma PDF')
+    plt.hist(mean, bins=100, density=True, alpha=0.5, label="Data")
+    plt.plot(x, pdf, "r-", label="Gamma PDF")
 
     # Calculate the Kolmogorov-Smirnov test statistic and p-value
-    ks_stat, p_val = sp.stats.kstest(mean, 'gamma', args=params)
+    ks_stat, p_val = sp.stats.kstest(mean, "gamma", args=params)
 
     # Add the test statistic and p-value to the plot
-    text = f'KS stat: {ks_stat:.3f}\np-value: {p_val:.3f}'
-    plt.text(0.6, 0.6, text, transform=plt.gca().transAxes)
+    plt.title(f"KS stat: {ks_stat:.3f}; p-value: {p_val:.3f}")
 
     # Add a legend and axis labels
     plt.legend()
-    plt.xlabel('Value')
-    plt.ylabel('Probability density')
+    plt.xlabel("Value")
+    plt.ylabel("Probability density")
 
     # Show the plot
     plt.show()
@@ -95,18 +93,16 @@ def compare_library_size(obs_data: csr_matrix, sim_data: csr_matrix):
 
     ks_stat, p_val = sp.stats.kstest(obs_library_size, sim_library_size)
 
-    group = ['observed'] * len(obs_library_size) + \
-        ['simulated'] * len(sim_library_size)
+    group = ["observed"] * len(obs_library_size) + ["simulated"] * len(sim_library_size)
     library_size = np.log(np.concatenate((obs_library_size, sim_library_size)))
 
-    data = {'library_size': library_size, 'group': group}
+    data = {"library_size": library_size, "group": group}
     data = pd.DataFrame(data=data)
 
     sns.boxplot(data=data, x="group", y="library_size", showfliers=False)
 
     # Add the test statistic and p-value to the plot
-    text = f'KS stat: {ks_stat:.3f}\np-value: {p_val:.3f}'
-    plt.text(0.6, 0.8, text, transform=plt.gca().transAxes)
+    plt.title(f"KS stat: {ks_stat:.3f}; p-value: {p_val:.3f}")
 
     # Show the plot
     plt.show()
@@ -127,17 +123,47 @@ def compare_mean_expression(obs_data: csr_matrix, sim_data: csr_matrix):
     sim_mean = np.array(sim_data.mean(axis=0)).flatten()
 
     ks_stat, p_val = sp.stats.kstest(obs_mean, sim_mean)
-    group = ['observed'] * len(obs_mean) + ['simulated'] * len(sim_mean)
+    group = ["observed"] * len(obs_mean) + ["simulated"] * len(sim_mean)
     mean = np.concatenate((obs_mean, sim_mean))
 
-    data = {'mean': mean, 'group': group}
+    data = {"mean": mean, "group": group}
     df = pd.DataFrame(data=data)
 
     sns.boxplot(data=df, x="group", y="mean", showfliers=False)
 
     # Add the test statistic and p-value to the plot
-    text = f'KS stat: {ks_stat:.3f}\np-value: {p_val:.3f}'
-    plt.text(0.6, 0.8, text, transform=plt.gca().transAxes)
+    plt.title(f"KS stat: {ks_stat:.3f}; p-value: {p_val:.3f}")
+
+    # Show the plot
+    plt.show()
+
+
+def compare_gene_variance(obs_data: csr_matrix, sim_data: csr_matrix):
+    """
+    Compare observed and simualted variance of gene expression
+
+    Parameters
+    ----------
+    obs_data : csr_matrix
+        Observed normalized matrix
+    sim_data : csr_matrix
+        Simulated normalized matrix
+    """
+
+    obs_var = np.var(obs_data.toarray(), axis=0)
+    sim_var = np.var(sim_data.toarray(), axis=0)
+
+    ks_stat, p_val = sp.stats.kstest(obs_var, sim_var)
+
+    group = ["observed"] * len(obs_var) + ["simulated"] * len(sim_var)
+    variance = np.concatenate((obs_var, sim_var))
+
+    data = {"variance": variance, "group": group}
+    df = pd.DataFrame(data=data)
+    sns.boxplot(data=df, x="group", y="variance", showfliers=False)
+
+    # Add the test statistic and p-value to the plot
+    plt.title(f"KS stat: {ks_stat:.3f}; p-value: {p_val:.3f}")
 
     # Show the plot
     plt.show()

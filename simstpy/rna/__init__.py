@@ -6,3 +6,4 @@ __version_info__ = tuple([int(num) for num in __version__.split('.')])  # noqa: 
 from .fit_distribution import *
 from .plotting import *
 from .simulate import *
+from .utils import *
