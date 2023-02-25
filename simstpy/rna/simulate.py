@@ -138,8 +138,9 @@ def simulate_multi_group(
 
     sim_library_size = simulate_library_size(library_size_params, n_cells)
     sim_mean_expression = simulate_mean_expression(mean_expression_params, n_genes)
-
-    gene_ids = [f"gene_{i}" for i in range(n_genes)]
+    
+    # select the top 90% genes
+    gene_idx = np.argwhere(sim_mean_expression > np.quantile(sim_mean_expression, 0.1)).flatten()
 
     cell_ids, all_de_genes, counts = [], [], np.empty((0, n_genes))
     for cell_group in obs[group_name].values.unique():
@@ -150,7 +151,7 @@ def simulate_multi_group(
         cell_ids += list(obs.index.values[obs[group_name].values == cell_group])
 
         # randomly select a number of DE genes
-        de_genes = np.random.choice(range(n_genes), size=n_marker_genes)
+        de_genes = np.random.choice(gene_idx, size=n_marker_genes)
         all_de_genes += list(de_genes)
 
         # generate DE factor from log-normal distribution
@@ -174,6 +175,7 @@ def simulate_multi_group(
     for i in all_de_genes:
         is_de_genes[i] = True
 
+    gene_ids = [f"gene_{i}" for i in range(n_genes)]
     var = pd.DataFrame(data={"spatially_variable": is_de_genes}, index=gene_ids)
 
     counts = sp.sparse.csr_matrix(counts)
