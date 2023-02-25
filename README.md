@@ -14,8 +14,3 @@ The quickest and easiest way to get simstpy is to to use pip:
 pip install simstpy
 ```
 
-# Tutorial
-
-You can find [here](https://pychromvar.readthedocs.io/en/latest/notebooks/multimodal_pbmc_3k.html) a tutorial how to use pychromVAR combined with Muon to analysis multimodal single-cell PBMC data.
-
-
