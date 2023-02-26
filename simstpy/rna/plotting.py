@@ -8,26 +8,28 @@ import pandas as pd
 from scipy.sparse import csr_matrix
 
 
-def plot_library_size_distribution(data: np.array, params: tuple):
+def plot_library_size_distribution(data: csr_matrix, params: tuple):
     """
     Plot fitted distribution for library size
 
     Parameters
     ----------
-    data : np.array
-        Library size
+    data : csr_matrix
+        Raw cell by gene count matrix. 
     params : tuple
         Estimated parameters
     """
-    x = np.linspace(0, np.max(data), 1000)
+    library_size = np.array(data.sum(axis=1)).flatten()
+
+    x = np.linspace(0, np.max(library_size), 1000)
     pdf = sp.stats.lognorm.pdf(x, *params)
 
     # Plot the histogram of the data and the fitted distribution
-    plt.hist(data, bins=100, density=True, alpha=0.5, label="Data")
+    plt.hist(library_size, bins=100, density=True, alpha=0.5, label="Data")
     plt.plot(x, pdf, "r-", label="Log-Norm PDF")
 
     # Calculate the Kolmogorov-Smirnov test statistic and p-value
-    ks_stat, p_val = sp.stats.kstest(data, "lognorm", args=params)
+    ks_stat, p_val = sp.stats.kstest(library_size, "lognorm", args=params)
 
     # Add the test statistic and p-value to the plot
     plt.title(f"KS stat: {ks_stat:.3f}; p-value: {p_val:.3f}")
