@@ -24,6 +24,7 @@ SPATIAL_PATTERNS = [
     "human_DLPFC_151674",
     "human_DLPFC_151675",
     "human_DLPFC_151676",
+    "mouse_coronal_slices"
 ]
 
 
