@@ -101,10 +101,11 @@ def simulate_multi_group(
     n_cells: int,
     n_genes: int,
     n_marker_genes: int,
-    obs: pd.DataFrame,
+    df_spatial: pd.DataFrame,
     group_name: str,
     mean: float = 2,
     sigma: float = 0.1,
+    marker_gene_vmin: float = 0.5,
 ) -> AnnData:
     """
     Simulate data with multiple groups
@@ -138,17 +139,21 @@ def simulate_multi_group(
 
     sim_library_size = simulate_library_size(library_size_params, n_cells)
     sim_mean_expression = simulate_mean_expression(mean_expression_params, n_genes)
-    
+
     # select the top 90% genes
-    gene_idx = np.argwhere(sim_mean_expression > np.quantile(sim_mean_expression, 0.1)).flatten()
+    gene_idx = np.argwhere(
+        sim_mean_expression > np.quantile(sim_mean_expression, marker_gene_vmin)
+    ).flatten()
 
     cell_ids, all_de_genes, counts = [], [], np.empty((0, n_genes))
-    for cell_group in obs[group_name].values.unique():
+    for cell_group in df_spatial[group_name].unique():
         # get library size for cells in
-        library_size = sim_library_size[obs[group_name].values == cell_group]
+        library_size = sim_library_size[df_spatial[group_name].values == cell_group]
 
         # get cell ids
-        cell_ids += list(obs.index.values[obs[group_name].values == cell_group])
+        cell_ids += list(
+            df_spatial.index.values[df_spatial[group_name].values == cell_group]
+        )
 
         # randomly select a number of DE genes
         de_genes = np.random.choice(gene_idx, size=n_marker_genes)
@@ -167,7 +172,8 @@ def simulate_multi_group(
         mean_expression = np.expand_dims(mean_expression, axis=0)
 
         mat = np.matmul(library_size, mean_expression)
-        counts = np.concatenate((counts, np.random.poisson(mat)), axis=0)
+        mat = np.random.poisson(mat)
+        counts = np.concatenate((counts, mat), axis=0)
 
     all_de_genes = list(set(all_de_genes))
     is_de_genes = [False] * n_genes
@@ -179,6 +185,6 @@ def simulate_multi_group(
     var = pd.DataFrame(data={"spatially_variable": is_de_genes}, index=gene_ids)
 
     counts = sp.sparse.csr_matrix(counts)
-    adata = AnnData(counts, obs=obs.loc[cell_ids], dtype=np.int16, var=var)
+    adata = AnnData(counts, obs=df_spatial.loc[cell_ids], dtype=np.int16, var=var)
 
     return adata
