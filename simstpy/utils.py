@@ -5,7 +5,6 @@ from pathlib import Path
 import pandas as pd
 from anndata import AnnData
 import pkg_resources
-import matplotlib.pyplot as plt
 
 from squidpy.read._utils import _load_image
 from squidpy._constants._pkg_constants import Key
@@ -24,7 +23,9 @@ SPATIAL_PATTERNS = [
     "human_DLPFC_151674",
     "human_DLPFC_151675",
     "human_DLPFC_151676",
-    "mouse_coronal_slices"
+    "mouse_cerebellum",
+    "mouse_coronal_slices",
+    "breast_tumor"
 ]
 
 
