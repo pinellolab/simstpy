@@ -84,7 +84,7 @@ def add_image_file_10x(adata: AnnData, library_id: str, image_path: str) -> AnnD
 
 
 def add_spatial_assay(
-    adata: AnnData, df_spatial: pd.DataFrame, library_id: str
+    adata: AnnData, library_id: str
 ) -> AnnData:
     """
     Add spatial assay to anndata
@@ -93,8 +93,6 @@ def add_spatial_assay(
     ----------
     adata : AnnData
         Input anndata object
-    df_spatial : pd.DataFrame
-        A dataframe including spatial coordinates information
     library_id: str
         Library Id
 
@@ -112,10 +110,17 @@ def add_spatial_assay(
 
     return adata
 
+def get_all_spatial_patterns() -> list():
+    """
+    Get all available spatial patterns
+    """
+
+    return SPATIAL_PATTERNS
+
 
 def read_spatial_pattern(spatial_pattern: str) -> pd.DataFrame:
     """
-    Read spsatial pattern
+    Read spatial pattern
 
     Parameters
     ----------
