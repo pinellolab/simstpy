@@ -145,6 +145,8 @@ def simulate_multi_group(
         sim_mean_expression > np.quantile(sim_mean_expression, marker_gene_vmin)
     ).flatten()
 
+    df_spatial[group_name] = df_spatial[group_name].astype(str)
+
     cell_ids, all_de_genes, counts = [], [], np.empty((0, n_genes))
     for cell_group in df_spatial[group_name].unique():
         # get library size for cells in
