@@ -25,8 +25,10 @@ dependencies = [
     "numpy",
     "scipy",
     "scanpy",
+    "squidpy",
+    "pandas"
 ]
 
 [project.urls]
 Source = "https://github.com/lzj1769/simstpy"
-Documentation = "https://pychromvar.readthedocs.io/en/latest/"
+Documentation = "https://simstpy.readthedocs.io/en/latest/"
