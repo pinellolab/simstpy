@@ -97,13 +97,13 @@ def simuate_single_group(
 
 
 def simulate_multi_group(
-    library_size_params: tuple,
-    mean_expression_params: tuple,
-    n_cells: int,
-    n_genes: int,
-    n_marker_genes: int,
-    df_spatial: pd.DataFrame,
-    group_name: str,
+    library_size_params: tuple = (0.51313746, 0.0, 2300.6353),
+    mean_expression_params: tuple = (0.6227306182997188, 0, 0.24285327175872837),
+    n_cells: int = None,
+    n_genes: int = None,
+    n_marker_genes: int = None,
+    df_spatial: pd.DataFrame = None,
+    group_name: str = None,
     mean: float = 2,
     sigma: float = 0.1,
     marker_gene_vmin: float = 0.5,

@@ -1,52 +1,59 @@
 """Helper functions"""
 
 import pandas as pd
-import pkg_resources
-
-SPATIAL_PATTERNS = [
-    "human_DLPFC_151507",
-    "human_DLPFC_151508",
-    "human_DLPFC_151509",
-    "human_DLPFC_151510",
-    "human_DLPFC_151669",
-    "human_DLPFC_151670",
-    "human_DLPFC_151671",
-    "human_DLPFC_151672",
-    "human_DLPFC_151673",
-    "human_DLPFC_151674",
-    "human_DLPFC_151675",
-    "human_DLPFC_151676",
-    "mouse_cerebellum",
-    "mouse_coronal_slices",
-    "breast_tumor"
-]
+import numpy as np
 
 
-def get_all_patterns() -> list():
+def array_to_dataframe(pattern: np.array) -> pd.DataFrame:
     """
-    Get all available spatial patterns
-    """
-
-    return SPATIAL_PATTERNS
-
-
-def read_pattern(spatial_pattern: str) -> pd.DataFrame:
-    """
-    Read spatial pattern
+    Convert spatial pattern from array to dataframe
 
     Parameters
     ----------
-    spatial_pattern : str
-        _description_
+    pattern : np.array
+        input pattern
 
     Returns
     -------
     pd.DataFrame
         _description_
     """
-    assert spatial_pattern in SPATIAL_PATTERNS, f"Cannot find {spatial_pattern}"
 
-    filename = pkg_resources.resource_stream(
-        __name__, f"patterns/{spatial_pattern}.csv")
+    nrow, ncol = pattern.shape
+    x, y, value = list(), list(), list()
+    for i in range(nrow):
+        for j in range(ncol):
+            x.append(i)
+            y.append(j)
+            value.append(pattern[i, j])
 
-    return pd.read_csv(filename, index_col=0)
+    return pd.DataFrame(data={"x": x, "y": y, "spatial_cluster": value})
+
+
+def dataframe_to_array(pattern: pd.DataFrame) -> np.array:
+    """
+    Convert saptial pattern from array to dataframe
+
+    Parameters
+    ----------
+    pattern : pd.DataFrame
+        Input data
+
+    Returns
+    -------
+    np.array
+        _description_
+    """
+
+    x_axis = pattern.x.values
+    y_axis = pattern.y.values
+    spatial_cluster = pattern.spatial_cluster.values
+
+    nrow = np.max(x_axis)
+    ncol = np.max(y_axis)
+    res = np.zeros(shape=(nrow + 1, ncol + 1))
+
+    for i in range(len(x_axis)):
+        res[x_axis[i], y_axis[i]] = spatial_cluster[i]
+
+    return res
