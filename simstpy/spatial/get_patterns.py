@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import pkg_resources
 from .utils import array_to_dataframe
 
 SPATIAL_PATTERNS = [
