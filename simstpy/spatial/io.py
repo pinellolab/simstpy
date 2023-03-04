@@ -3,7 +3,6 @@
 import pandas as pd
 import pkg_resources
 
-
 SPATIAL_PATTERNS = [
     "human_DLPFC_151507",
     "human_DLPFC_151508",
@@ -23,7 +22,7 @@ SPATIAL_PATTERNS = [
 ]
 
 
-def get_all_spatial_patterns() -> list():
+def get_all_patterns() -> list():
     """
     Get all available spatial patterns
     """
@@ -31,7 +30,7 @@ def get_all_spatial_patterns() -> list():
     return SPATIAL_PATTERNS
 
 
-def read_spatial_pattern(spatial_pattern: str) -> pd.DataFrame:
+def read_pattern(spatial_pattern: str) -> pd.DataFrame:
     """
     Read spatial pattern
 

@@ -1,9 +1,8 @@
 """Test data fitting functions"""
 
-import simstpy as sim
 import squidpy as sq
 import numpy as np
-
+import simstpy as sim
 
 def test_fit_library_size():
     """
