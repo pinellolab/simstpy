@@ -47,6 +47,6 @@ def read_pattern(spatial_pattern: str) -> pd.DataFrame:
     assert spatial_pattern in SPATIAL_PATTERNS, f"Cannot find {spatial_pattern}"
 
     filename = pkg_resources.resource_stream(
-        __name__, f"data/{spatial_pattern}.csv")
+        __name__, f"patterns/{spatial_pattern}.csv")
 
     return pd.read_csv(filename, index_col=0)
