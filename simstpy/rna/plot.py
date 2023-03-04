@@ -1,17 +1,16 @@
-"""Plotting functions"""
+"""Functions for plotting"""
 
 import numpy as np
 import scipy as sp
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
 from scipy.sparse import csr_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
-def plot_library_size_distribution(data: csr_matrix, params: tuple):
+def plot_library_size(data: csr_matrix, params: tuple):
     """
     Plot fitted distribution for library size
-
     Parameters
     ----------
     data : csr_matrix
@@ -43,10 +42,9 @@ def plot_library_size_distribution(data: csr_matrix, params: tuple):
     plt.show()
 
 
-def plot_gene_mean_distribution(data: np.array, params: tuple):
+def plot_mean_expression(data: np.array, params: tuple):
     """
     Plot fitted distribution for mean gene expression
-
     Parameters
     ----------
     data : np.array
@@ -82,7 +80,6 @@ def plot_gene_mean_distribution(data: np.array, params: tuple):
 def compare_library_size(obs_data: csr_matrix, sim_data: csr_matrix):
     """
     Compare observed and simualted library size
-
     Parameters
     ----------
     obs_data : csr_matrix
@@ -95,7 +92,8 @@ def compare_library_size(obs_data: csr_matrix, sim_data: csr_matrix):
 
     ks_stat, p_val = sp.stats.kstest(obs_library_size, sim_library_size)
 
-    group = ["observed"] * len(obs_library_size) + ["simulated"] * len(sim_library_size)
+    group = ["observed"] * len(obs_library_size) + \
+        ["simulated"] * len(sim_library_size)
     library_size = np.log(np.concatenate((obs_library_size, sim_library_size)))
 
     data = {"library_size": library_size, "group": group}
@@ -113,7 +111,6 @@ def compare_library_size(obs_data: csr_matrix, sim_data: csr_matrix):
 def compare_mean_expression(obs_data: csr_matrix, sim_data: csr_matrix):
     """
     Compare observed and simualted mean gene expression
-
     Parameters
     ----------
     obs_data : csr_matrix
@@ -143,7 +140,6 @@ def compare_mean_expression(obs_data: csr_matrix, sim_data: csr_matrix):
 def compare_gene_variance(obs_data: csr_matrix, sim_data: csr_matrix):
     """
     Compare observed and simualted variance of gene expression
-
     Parameters
     ----------
     obs_data : csr_matrix

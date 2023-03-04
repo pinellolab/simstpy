@@ -1,7 +1,9 @@
-"""Functions for fitting data distribution"""
+"""Functions for data fitting"""
+
 import numpy as np
 import scipy as sp
 from scipy.sparse import csr_matrix
+
 
 def fit_library_size(data: csr_matrix):
     """
@@ -9,10 +11,8 @@ def fit_library_size(data: csr_matrix):
 
     Parameters
     ----------
-    data : _type_
+    data : csr_matrix
         Raw cell by gene count matrix. 
-    plot : bool, optional
-        Plot the data and fitted distribution, by default True
     """
 
     library_size = np.array(data.sum(axis=1)).flatten()
@@ -23,20 +23,20 @@ def fit_library_size(data: csr_matrix):
     return params
 
 
-def fit_mean_expression_gamma(data: csr_matrix, q: float=0.99):
+def fit_gene_expression(data: csr_matrix, quantile: float = 0.99):
     """
-    Fit mean expression of genes using Gamma distribution
+    Fit mean gene expression using Gamma distribution
 
     Parameters
     ----------
-    data : _type_
+    data : csr_matrix
         Normalized cell by gene expression matrix. 
-    q : float, optional
-        _description_, by default True
+    quantile : float, optional
+        quantile, by default True
     """
     mean = np.array(data.mean(axis=0)).flatten()
-    if q is not None:
-        threshold = np.quantile(mean, q)
+    if quantile is not None:
+        threshold = np.quantile(mean, quantile)
         # update the mean value
         mean[mean > threshold] = threshold
 

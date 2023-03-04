@@ -1,6 +1,6 @@
-""" Module for RNA-seq simulation """
+""" Module for simulating omics data """
 
-from .fit_distribution import *
-from .plotting import *
+from .fit import *
+from .plot import *
 from .simulate import *
-
+from .utils import *

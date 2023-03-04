@@ -1,10 +1,10 @@
-""" Functions for data simulation."""
+"""Functions for simulating RNA-seq data"""
 
 import numpy as np
-import scipy as sp
 import pandas as pd
-from anndata import AnnData
+import scipy as sp
 from scipy.sparse import csr_matrix
+from anndata import AnnData
 
 
 def simulate_library_size(params: tuple, n_cells: int):
@@ -73,7 +73,8 @@ def simuate_single_group(
     """
 
     sim_library_size = simulate_library_size(library_size_params, n_cells)
-    sim_mean_expression = simulate_mean_expression(mean_expression_params, n_genes)
+    sim_mean_expression = simulate_mean_expression(
+        mean_expression_params, n_genes)
 
     # get a cellxgene matrix where the value represent average expression
     gene_mean = sim_mean_expression / np.sum(sim_mean_expression)
@@ -138,11 +139,13 @@ def simulate_multi_group(
     """
 
     sim_library_size = simulate_library_size(library_size_params, n_cells)
-    sim_mean_expression = simulate_mean_expression(mean_expression_params, n_genes)
+    sim_mean_expression = simulate_mean_expression(
+        mean_expression_params, n_genes)
 
     # select the top 90% genes
     gene_idx = np.argwhere(
-        sim_mean_expression > np.quantile(sim_mean_expression, marker_gene_vmin)
+        sim_mean_expression > np.quantile(
+            sim_mean_expression, marker_gene_vmin)
     ).flatten()
 
     cell_ids, all_de_genes, counts = [], [], np.empty((0, n_genes))
@@ -160,7 +163,8 @@ def simulate_multi_group(
         all_de_genes += list(de_genes)
 
         # generate DE factor from log-normal distribution
-        de_ratio = np.random.lognormal(mean=mean, sigma=sigma, size=n_marker_genes)
+        de_ratio = np.random.lognormal(
+            mean=mean, sigma=sigma, size=n_marker_genes)
         de_ratio[de_ratio < 1] = 1 / de_ratio[de_ratio < 1]
 
         # multiply the DE factor to mean gene expression
@@ -182,9 +186,11 @@ def simulate_multi_group(
         is_de_genes[i] = True
 
     gene_ids = [f"gene_{i}" for i in range(n_genes)]
-    var = pd.DataFrame(data={"spatially_variable": is_de_genes}, index=gene_ids)
+    var = pd.DataFrame(
+        data={"spatially_variable": is_de_genes}, index=gene_ids)
 
     counts = sp.sparse.csr_matrix(counts)
-    adata = AnnData(counts, obs=df_spatial.loc[cell_ids], dtype=np.int16, var=var)
+    adata = AnnData(
+        counts, obs=df_spatial.loc[cell_ids], dtype=np.int16, var=var)
 
     return adata

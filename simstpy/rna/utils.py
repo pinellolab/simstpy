@@ -1,33 +1,12 @@
 """Helper functions"""
 
 import json
-from pathlib import Path
 import pandas as pd
+from pathlib import Path
 from anndata import AnnData
-import pkg_resources
 
 from squidpy.read._utils import _load_image
 from squidpy._constants._pkg_constants import Key
-
-
-SPATIAL_PATTERNS = [
-    "human_DLPFC_151507",
-    "human_DLPFC_151508",
-    "human_DLPFC_151509",
-    "human_DLPFC_151510",
-    "human_DLPFC_151669",
-    "human_DLPFC_151670",
-    "human_DLPFC_151671",
-    "human_DLPFC_151672",
-    "human_DLPFC_151673",
-    "human_DLPFC_151674",
-    "human_DLPFC_151675",
-    "human_DLPFC_151676",
-    "mouse_cerebellum",
-    "mouse_coronal_slices",
-    "breast_tumor"
-]
-
 
 def add_image_file_10x(adata: AnnData, library_id: str, image_path: str) -> AnnData:
     """
@@ -63,7 +42,8 @@ def add_image_file_10x(adata: AnnData, library_id: str, image_path: str) -> AnnD
     )
 
     # load coordinates
-    coords = pd.read_csv(path / "tissue_positions_list.txt", header=None, index_col=0)
+    coords = pd.read_csv(path / "tissue_positions_list.txt",
+                         header=None, index_col=0)
     coords.columns = [
         "in_tissue",
         "array_row",
@@ -78,7 +58,8 @@ def add_image_file_10x(adata: AnnData, library_id: str, image_path: str) -> AnnD
     adata.obsm[Key.obsm.spatial] = adata.obs[
         ["pxl_row_in_fullres", "pxl_col_in_fullres"]
     ].values
-    adata.obs.drop(columns=["pxl_row_in_fullres", "pxl_col_in_fullres"], inplace=True)
+    adata.obs.drop(columns=["pxl_row_in_fullres",
+                   "pxl_col_in_fullres"], inplace=True)
 
     return adata
 
@@ -109,31 +90,3 @@ def add_spatial_assay(
     adata.obs.drop(columns=["x", "y"], inplace=True)
 
     return adata
-
-def get_all_spatial_patterns() -> list():
-    """
-    Get all available spatial patterns
-    """
-
-    return SPATIAL_PATTERNS
-
-
-def read_spatial_pattern(spatial_pattern: str) -> pd.DataFrame:
-    """
-    Read spatial pattern
-
-    Parameters
-    ----------
-    spatial_pattern : str
-        _description_
-
-    Returns
-    -------
-    pd.DataFrame
-        _description_
-    """
-    assert spatial_pattern in SPATIAL_PATTERNS, f"Cannot find {spatial_pattern}"
-
-    filename = pkg_resources.resource_stream(__name__, f"data/{spatial_pattern}.csv")
-
-    return pd.read_csv(filename, index_col=0)
