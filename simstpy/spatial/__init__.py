@@ -1,3 +1,3 @@
 """ Module for spatial file """
 
-from .io import *
+from .utils import *
