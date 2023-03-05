@@ -143,6 +143,7 @@ def simulate_multi_group(
     svgs_exp = simulate_mean_expression(gene_exp_params, n_svgs)
     all_cell_ids, svg_counts = [], np.empty((0, n_svgs))
     svgs_idx_list = np.array_split(range(n_svgs), n_groups)
+
     for i, cell_group in enumerate(df_spatial[group_name].unique()):
         cell_ids = df_spatial.index.values[df_spatial[group_name].values == cell_group]
         all_cell_ids += list(cell_ids)
@@ -151,7 +152,7 @@ def simulate_multi_group(
         svgs_idx = svgs_idx_list[i]
 
         # generate DE factor from log-normal distribution
-        if fold_change == "fold_change":
+        if fold_change == "lognormal":
             de_ratio = np.random.lognormal(mean=mean, sigma=sigma, size=len(svgs_idx))
             de_ratio[de_ratio < 1] = 1 / de_ratio[de_ratio < 1]
         elif fold_change == "fixed":
