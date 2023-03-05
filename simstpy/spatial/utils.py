@@ -25,7 +25,7 @@ def array_to_dataframe(pattern: np.array) -> pd.DataFrame:
         for j in range(ncol):
             x.append(i)
             y.append(j)
-            value.append(pattern[i, j])
+            value.append(str(pattern[i, j]))
 
     return pd.DataFrame(data={"x": x, "y": y, "spatial_cluster": value})
 
