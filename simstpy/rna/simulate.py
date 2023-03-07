@@ -295,6 +295,6 @@ def sim_svgs(n_svgs=10, n_non_svgs=2, library_size=1e4, random_state=42):
                     obs=obs,
                     var=var,
                     obsm={"spatial": coords},
-                    dtype=np.int16)
+                    dtype=np.float32)
 
     return adata
