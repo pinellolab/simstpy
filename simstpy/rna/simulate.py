@@ -74,16 +74,16 @@ def sim_single_group(
         An AnnData object containing simulated count matrix
     """
 
-    sim_library_size = simulate_library_size(library_size_params, n_cells)
-    sim_mean_expression = simulate_mean_expression(
+    library_size = sim_library_size(library_size_params, n_cells)
+    mean_expression = sim_mean_expression(
         mean_expression_params, n_genes)
 
     # get a cellxgene matrix where the value represent average expression
-    gene_mean = sim_mean_expression / np.sum(sim_mean_expression)
+    gene_mean = mean_expression / np.sum(mean_expression)
 
-    sim_library_size = np.expand_dims(sim_library_size, axis=1)
+    library_size = np.expand_dims(library_size, axis=1)
     gene_mean = np.expand_dims(gene_mean, axis=0)
-    mat = np.matmul(sim_library_size, gene_mean)
+    mat = np.matmul(library_size, gene_mean)
     counts = csr_matrix(np.random.poisson(mat))
 
     if cell_ids is None:
