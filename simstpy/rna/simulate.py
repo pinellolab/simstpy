@@ -9,7 +9,7 @@ from sklearn.gaussian_process.kernels import RBF
 from anndata import AnnData
 
 
-def simulate_library_size(params: tuple, n_cells: int):
+def sim_library_size(params: tuple, n_cells: int):
     """
     Simulate cell-specific library size
 
@@ -27,7 +27,7 @@ def simulate_library_size(params: tuple, n_cells: int):
     return library_size_samples
 
 
-def simulate_mean_expression(params: tuple, n_genes: int):
+def sim_mean_expression(params: tuple, n_genes: int):
     """
     Simulate mean expression of genes using gamma distribution
 
@@ -45,7 +45,7 @@ def simulate_mean_expression(params: tuple, n_genes: int):
     return gene_mean_samples
 
 
-def simuate_single_group(
+def sim_single_group(
     library_size_params: tuple,
     mean_expression_params: tuple,
     n_cells: int,
@@ -98,13 +98,14 @@ def simuate_single_group(
     return adata
 
 
-def simulate_multi_group(
+def sim_multi_group(
     lib_size_params: tuple = (0.51313746, 0.0, 2300.6353),
     gene_exp_params: tuple = (0.6227306182997188, 0, 0.24285327175872837),
     n_non_svgs: int = None,
     n_svgs: int = None,
     df_spatial: pd.DataFrame = None,
     group_name: str = None,
+    library_id: str = None,
     fold_change: str = 'lognormal',
     mean: float = 2,
     sigma: float = 0.5
@@ -137,13 +138,13 @@ def simulate_multi_group(
         An AnnData object containing simulated count matrix
     """
 
-    lib_size = simulate_library_size(lib_size_params, n_cells=len(df_spatial))
+    lib_size = sim_library_size(lib_size_params, n_cells=len(df_spatial))
 
     df_spatial[group_name] = df_spatial[group_name].astype(str)
     n_groups = len(df_spatial[group_name].unique())
 
     # we first generate SVGs for each group
-    svgs_exp = simulate_mean_expression(gene_exp_params, n_svgs)
+    svgs_exp = sim_mean_expression(gene_exp_params, n_svgs)
     all_cell_ids, svg_counts = [], np.empty((0, n_svgs))
     svgs_idx_list = np.array_split(range(n_svgs), n_groups)
 
@@ -177,7 +178,7 @@ def simulate_multi_group(
         svg_counts = np.concatenate((svg_counts, mat), axis=0)
 
     # we then generate non SVGs
-    non_svgs_exp = simulate_mean_expression(gene_exp_params, n_non_svgs)
+    non_svgs_exp = sim_mean_expression(gene_exp_params, n_non_svgs)
     non_svgs_exp = non_svgs_exp / np.sum(non_svgs_exp)
 
     lib_size = np.expand_dims(lib_size, axis=1)
@@ -234,10 +235,17 @@ def simulate_multi_group(
     gene_ids = [f"gene_{i}" for i in range(n_svgs + n_non_svgs)]
     var = pd.DataFrame(
         data={"spatially_variable": is_de_genes}, index=gene_ids)
-
+    
+    df_spatial = df_spatial.loc[all_cell_ids]
     counts = sp.sparse.csr_matrix(counts)
-    adata = AnnData(
-        counts, obs=df_spatial.loc[all_cell_ids], dtype=np.int16, var=var)
+    adata = AnnData(counts,
+                    obs=df_spatial,
+                    dtype=np.float32,
+                    var=var)
+
+    adata.uns["spatial"] = {library_id: {}}
+    adata.obsm["spatial"] = adata.obs[["x", "y"]].values
+    adata.obs.drop(columns=["x", "y"], inplace=True)
 
     return adata
 
