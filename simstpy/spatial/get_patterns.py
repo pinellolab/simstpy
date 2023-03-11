@@ -137,5 +137,9 @@ def read_pattern(spatial_pattern: str) -> pd.DataFrame:
         __name__, f"patterns/{spatial_pattern}.csv"
     )
 
-    return pd.read_csv(filename, index_col=0)
+    df_spatial = pd.read_csv(filename, index_col=0)
+
+    df_spatial = df_spatial.dropna()
+
+    return df_spatial
 

@@ -108,7 +108,9 @@ def sim_multi_group(
     library_id: str = None,
     fold_change: str = 'lognormal',
     mean: float = 2,
-    sigma: float = 0.5
+    sigma: float = 0.5,
+    min_fc: float = 2,
+    max_fc: float = 4
 ) -> AnnData:
     """
     Simulate data with multiple groups
@@ -160,8 +162,11 @@ def sim_multi_group(
             de_ratio = np.random.lognormal(
                 mean=mean, sigma=sigma, size=len(svgs_idx))
             de_ratio[de_ratio < 1] = 1 / de_ratio[de_ratio < 1]
+
         elif fold_change == "fixed":
             de_ratio = mean
+        elif fold_change == "step":
+            de_ratio = np.linspace(start=min_fc, stop=max_fc, num=len(svgs_idx))
 
         _svgs_exp = svgs_exp
         _svgs_exp[svgs_idx] = _svgs_exp[svgs_idx] * de_ratio
@@ -187,46 +192,6 @@ def sim_multi_group(
     non_svg_counts = np.random.poisson(mat)
 
     counts = np.concatenate((svg_counts, non_svg_counts), axis=1)
-
-    # # select the top 90% genes
-    # gene_idx = np.argwhere(
-    #     sim_mean_expression > np.quantile(
-    #         sim_mean_expression, marker_gene_vmin)
-    # ).flatten()
-
-    # df_spatial[group_name] = df_spatial[group_name].astype(str)
-
-    # cell_ids, all_de_genes, counts = [], [], np.empty((0, n_genes))
-
-    # for cell_group in df_spatial[group_name].unique():
-    #     # get library size for cells in
-    #     library_size = sim_library_size[df_spatial[group_name].values == cell_group]
-
-    #     # get cell ids
-    #     cell_ids += list(
-    #         df_spatial.index.values[df_spatial[group_name].values == cell_group]
-    #     )
-
-    #     # randomly select a number of DE genes
-    #     de_genes = np.random.choice(gene_idx, size=n_marker_genes)
-    #     all_de_genes += list(de_genes)
-
-    #     # generate DE factor from log-normal distribution
-    #     de_ratio = np.random.lognormal(
-    #         mean=mean, sigma=sigma, size=n_marker_genes)
-    #     de_ratio[de_ratio < 1] = 1 / de_ratio[de_ratio < 1]
-
-    #     # multiply the DE factor to mean gene expression
-    #     mean_expression = sim_mean_expression.copy()
-    #     mean_expression[de_genes] = mean_expression[de_genes] * de_ratio
-    #     mean_expression = mean_expression / np.sum(mean_expression)
-
-    #     library_size = np.expand_dims(library_size, axis=1)
-    #     mean_expression = np.expand_dims(mean_expression, axis=0)
-
-    #     mat = np.matmul(library_size, mean_expression)
-    #     mat = np.random.poisson(mat)
-    #     counts = np.concatenate((counts, mat), axis=0)
 
     is_de_genes = [False] * (n_svgs + n_non_svgs)
     for i in range(n_svgs):

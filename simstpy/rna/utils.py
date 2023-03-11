@@ -62,31 +62,3 @@ def add_image_file_10x(adata: AnnData, library_id: str, image_path: str) -> AnnD
                    "pxl_col_in_fullres"], inplace=True)
 
     return adata
-
-
-def add_spatial_assay(
-    adata: AnnData, library_id: str
-) -> AnnData:
-    """
-    Add spatial assay to anndata
-
-    Parameters
-    ----------
-    adata : AnnData
-        Input anndata object
-    library_id: str
-        Library Id
-
-    Returns
-    -------
-    AnnData
-        Output anndata object
-    """
-
-    # load count matrix
-    adata.uns[Key.obsm.spatial] = {library_id: {}}
-    adata.obsm[Key.obsm.spatial] = adata.obs[["x", "y"]].values
-
-    adata.obs.drop(columns=["x", "y"], inplace=True)
-
-    return adata
