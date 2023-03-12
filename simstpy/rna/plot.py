@@ -14,7 +14,7 @@ def plot_library_size(data: csr_matrix, params: tuple):
     Parameters
     ----------
     data : csr_matrix
-        Raw cell by gene count matrix. 
+        Raw cell by gene count matrix.
     params : tuple
         Estimated parameters
     """
@@ -77,7 +77,9 @@ def plot_mean_expression(data: np.array, params: tuple):
     plt.show()
 
 
-def compare_library_size(obs_data: csr_matrix, sim_data: csr_matrix):
+def compare_library_size(
+    obs_data: csr_matrix, sim_data: csr_matrix, return_ax: bool = False
+):
     """
     Compare observed and simualted library size
     Parameters
@@ -92,23 +94,21 @@ def compare_library_size(obs_data: csr_matrix, sim_data: csr_matrix):
 
     ks_stat, p_val = sp.stats.kstest(obs_library_size, sim_library_size)
 
-    group = ["observed"] * len(obs_library_size) + \
-        ["simulated"] * len(sim_library_size)
-    library_size = np.log(np.concatenate((obs_library_size, sim_library_size)))
+    _, ax = plt.subplots()
+    ax.boxplot([obs_library_size, sim_library_size], labels=("observed", "simulated"))
 
-    data = {"library_size": library_size, "group": group}
-    data = pd.DataFrame(data=data)
+    ax.set_title(f"KS stat: {ks_stat:.3f}; p-value: {p_val:.3f}")
+    ax.set_ylabel("Library size")
 
-    sns.boxplot(data=data, x="group", y="library_size", showfliers=False)
-
-    # Add the test statistic and p-value to the plot
-    plt.title(f"KS stat: {ks_stat:.3f}; p-value: {p_val:.3f}")
-
-    # Show the plot
-    plt.show()
+    if return_ax:
+        return ax
+    else:
+        plt.show()
 
 
-def compare_mean_expression(obs_data: csr_matrix, sim_data: csr_matrix):
+def compare_mean_expression(
+    obs_data: csr_matrix, sim_data: csr_matrix, return_ax: bool = False
+):
     """
     Compare observed and simualted mean gene expression
     Parameters
@@ -122,22 +122,22 @@ def compare_mean_expression(obs_data: csr_matrix, sim_data: csr_matrix):
     sim_mean = np.array(sim_data.mean(axis=0)).flatten()
 
     ks_stat, p_val = sp.stats.kstest(obs_mean, sim_mean)
-    group = ["observed"] * len(obs_mean) + ["simulated"] * len(sim_mean)
-    mean = np.concatenate((obs_mean, sim_mean))
 
-    data = {"mean": mean, "group": group}
-    df = pd.DataFrame(data=data)
+    _, ax = plt.subplots()
+    ax.boxplot([obs_mean, sim_mean], labels=("observed", "simulated"))
 
-    sns.boxplot(data=df, x="group", y="mean", showfliers=False)
+    ax.set_title(f"KS stat: {ks_stat:.3f}; p-value: {p_val:.3f}")
+    ax.set_ylabel("Library size")
 
-    # Add the test statistic and p-value to the plot
-    plt.title(f"KS stat: {ks_stat:.3f}; p-value: {p_val:.3f}")
-
-    # Show the plot
-    plt.show()
+    if return_ax:
+        return ax
+    else:
+        plt.show()
 
 
-def compare_gene_variance(obs_data: csr_matrix, sim_data: csr_matrix):
+def compare_gene_variance(
+    obs_data: csr_matrix, sim_data: csr_matrix, return_ax: bool = False
+):
     """
     Compare observed and simualted variance of gene expression
     Parameters
@@ -153,15 +153,13 @@ def compare_gene_variance(obs_data: csr_matrix, sim_data: csr_matrix):
 
     ks_stat, p_val = sp.stats.kstest(obs_var, sim_var)
 
-    group = ["observed"] * len(obs_var) + ["simulated"] * len(sim_var)
-    variance = np.concatenate((obs_var, sim_var))
+    _, ax = plt.subplots()
+    ax.boxplot([obs_var, sim_var], labels=("observed", "simulated"))
 
-    data = {"variance": variance, "group": group}
-    df = pd.DataFrame(data=data)
-    sns.boxplot(data=df, x="group", y="variance", showfliers=False)
+    ax.set_title(f"KS stat: {ks_stat:.3f}; p-value: {p_val:.3f}")
+    ax.set_ylabel("Library size")
 
-    # Add the test statistic and p-value to the plot
-    plt.title(f"KS stat: {ks_stat:.3f}; p-value: {p_val:.3f}")
-
-    # Show the plot
-    plt.show()
+    if return_ax:
+        return ax
+    else:
+        plt.show()

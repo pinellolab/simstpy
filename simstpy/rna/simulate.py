@@ -105,7 +105,7 @@ def sim_multi_group(
     n_svgs: int = None,
     df_spatial: pd.DataFrame = None,
     group_name: str = None,
-    library_id: str = None,
+    library_id: str = "spatial",
     fold_change: str = 'lognormal',
     mean: float = 2,
     sigma: float = 0.5,
@@ -168,7 +168,7 @@ def sim_multi_group(
         elif fold_change == "step":
             de_ratio = np.linspace(start=min_fc, stop=max_fc, num=len(svgs_idx))
 
-        _svgs_exp = svgs_exp
+        _svgs_exp = svgs_exp.copy()
         _svgs_exp[svgs_idx] = _svgs_exp[svgs_idx] * de_ratio
 
         _svgs_exp = _svgs_exp / np.sum(_svgs_exp)
