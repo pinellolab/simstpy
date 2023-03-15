@@ -75,8 +75,7 @@ def sim_single_group(
     """
 
     library_size = sim_library_size(library_size_params, n_cells)
-    mean_expression = sim_mean_expression(
-        mean_expression_params, n_genes)
+    mean_expression = sim_mean_expression(mean_expression_params, n_genes)
 
     # get a cellxgene matrix where the value represent average expression
     gene_mean = mean_expression / np.sum(mean_expression)
@@ -106,11 +105,12 @@ def sim_multi_group(
     df_spatial: pd.DataFrame = None,
     group_name: str = None,
     library_id: str = "spatial",
-    fold_change: str = 'lognormal',
+    fold_change: str = "lognormal",
+    log_fc: float=1,
     mean: float = 2,
     sigma: float = 0.5,
     min_fc: float = 2,
-    max_fc: float = 4
+    max_fc: float = 4,
 ) -> AnnData:
     """
     Simulate data with multiple groups
@@ -145,10 +145,13 @@ def sim_multi_group(
     df_spatial[group_name] = df_spatial[group_name].astype(str)
     n_groups = len(df_spatial[group_name].unique())
 
-    # we first generate SVGs for each group
+    # we sampled a number of SVGs and non-SVGs
+    non_svgs_exp = sim_mean_expression(gene_exp_params, n_non_svgs)
     svgs_exp = sim_mean_expression(gene_exp_params, n_svgs)
-    all_cell_ids, svg_counts = [], np.empty((0, n_svgs))
+
+    # for SVGs, we split the genes into serveral groups
     svgs_idx_list = np.array_split(range(n_svgs), n_groups)
+    all_cell_ids, expression = [], np.empty((0, n_svgs + n_non_svgs))
 
     for i, cell_group in enumerate(df_spatial[group_name].unique()):
         cell_ids = df_spatial.index.values[df_spatial[group_name].values == cell_group]
@@ -159,54 +162,41 @@ def sim_multi_group(
 
         # generate DE factor from log-normal distribution
         if fold_change == "lognormal":
-            de_ratio = np.random.lognormal(
-                mean=mean, sigma=sigma, size=len(svgs_idx))
+            de_ratio = np.random.lognormal(mean=mean, sigma=sigma, size=len(svgs_idx))
             de_ratio[de_ratio < 1] = 1 / de_ratio[de_ratio < 1]
-
         elif fold_change == "fixed":
-            de_ratio = mean
+            de_ratio = 2**log_fc
         elif fold_change == "step":
             de_ratio = np.linspace(start=min_fc, stop=max_fc, num=len(svgs_idx))
 
         _svgs_exp = svgs_exp.copy()
         _svgs_exp[svgs_idx] = _svgs_exp[svgs_idx] * de_ratio
 
-        _svgs_exp = _svgs_exp / np.sum(_svgs_exp)
-        _svgs_exp = np.expand_dims(_svgs_exp, axis=0)
+        exp = np.concatenate((_svgs_exp, non_svgs_exp))
 
-        _lib_size = lib_size[df_spatial[group_name].values ==
-                             cell_group].copy()
+        exp = exp / np.sum(exp)
+        exp = np.expand_dims(exp, axis=0)
+
+        _lib_size = lib_size[df_spatial[group_name].values == cell_group].copy()
         _lib_size = np.expand_dims(_lib_size, axis=1)
 
-        mat = np.matmul(_lib_size, _svgs_exp)
-        mat = np.random.poisson(mat)
-        svg_counts = np.concatenate((svg_counts, mat), axis=0)
+        mat = np.matmul(_lib_size, exp)
+        expression = np.concatenate((expression, mat), axis=0)
 
     # we then generate non SVGs
-    non_svgs_exp = sim_mean_expression(gene_exp_params, n_non_svgs)
-    non_svgs_exp = non_svgs_exp / np.sum(non_svgs_exp)
-
-    lib_size = np.expand_dims(lib_size, axis=1)
-    non_svgs_exp = np.expand_dims(non_svgs_exp, axis=0)
-    mat = np.matmul(lib_size, non_svgs_exp)
-    non_svg_counts = np.random.poisson(mat)
-
-    counts = np.concatenate((svg_counts, non_svg_counts), axis=1)
+    counts = np.random.poisson(expression)
 
     is_de_genes = [False] * (n_svgs + n_non_svgs)
     for i in range(n_svgs):
         is_de_genes[i] = True
 
     gene_ids = [f"gene_{i}" for i in range(n_svgs + n_non_svgs)]
-    var = pd.DataFrame(
-        data={"spatially_variable": is_de_genes}, index=gene_ids)
-    
+    var = pd.DataFrame(data={"spatially_variable": is_de_genes}, index=gene_ids)
+
     df_spatial = df_spatial.loc[all_cell_ids]
+    df_spatial['obs_ids'] = all_cell_ids
     counts = sp.sparse.csr_matrix(counts)
-    adata = AnnData(counts,
-                    obs=df_spatial,
-                    dtype=np.float32,
-                    var=var)
+    adata = AnnData(counts, obs=df_spatial, dtype=np.float32, var=var)
 
     adata.uns["spatial"] = {library_id: {}}
     adata.obsm["spatial"] = adata.obs[["x", "y"]].values
@@ -214,12 +204,29 @@ def sim_multi_group(
 
     return adata
 
-
 def sim_svgs(n_svgs=10, n_non_svgs=2, library_size=1e4, random_state=42):
+    """
+    Simulate gene expression with spatial correlation
+
+    Parameters
+    ----------
+    n_svgs : int, optional
+        _description_, by default 10
+    n_non_svgs : int, optional
+        _description_, by default 2
+    library_size : _type_, optional
+        _description_, by default 1e4
+    random_state : int, optional
+        _description_, by default 42
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     x, y = np.meshgrid(np.arange(50), np.arange(50))
 
-    coords = np.column_stack((np.ndarray.flatten(x),
-                              np.ndarray.flatten(y)))
+    coords = np.column_stack((np.ndarray.flatten(x), np.ndarray.flatten(y)))
 
     rbf1 = RBF(1)
     rbf5 = RBF(5)
@@ -232,25 +239,29 @@ def sim_svgs(n_svgs=10, n_non_svgs=2, library_size=1e4, random_state=42):
     cov4 = rbf15(coords)
 
     np.random.seed(random_state)
-    svgs_counts = np.zeros((50*50, n_svgs))
+    svgs_counts = np.zeros((50 * 50, n_svgs))
     # generate SVGs
     for i in range(n_svgs):
         proportion = np.random.dirichlet((0.25, 0.25, 0.25, 0.25))
-        cov = proportion[0]*cov1 + proportion[1]*cov2 + \
-            proportion[2]*cov3 + proportion[3]*cov4
+        cov = (
+            proportion[0] * cov1
+            + proportion[1] * cov2
+            + proportion[2] * cov3
+            + proportion[3] * cov4
+        )
 
         svgs_counts[:, i] = sp.stats.multivariate_normal.rvs(
-            mean=np.zeros(50**2),
-            cov=cov)
+            mean=np.zeros(50**2), cov=cov
+        )
 
     # generate non-SVGs
-    non_svgs_counts = np.zeros((50*50, n_non_svgs))
+    non_svgs_counts = np.zeros((50 * 50, n_non_svgs))
     for i in range(n_non_svgs):
         non_svgs_counts[:, i] = np.random.standard_normal(50**2)
 
     counts = np.concatenate((svgs_counts, non_svgs_counts), axis=1)
     counts = np.exp(counts)
-    counts = normalize(counts, axis=1, norm='l1')
+    counts = normalize(counts, axis=1, norm="l1")
     counts = np.random.poisson(library_size * counts)
 
     is_de_genes = [False] * (n_svgs + n_non_svgs)
@@ -258,16 +269,14 @@ def sim_svgs(n_svgs=10, n_non_svgs=2, library_size=1e4, random_state=42):
         is_de_genes[i] = True
 
     var_ids = [f"gene_{i}" for i in range(n_svgs + n_non_svgs)]
-    obs_ids = [f"loc_{i}" for i in range(50*50)]
+    obs_ids = [f"loc_{i}" for i in range(50 * 50)]
 
     var = pd.DataFrame(data={"spatially_variable": is_de_genes}, index=var_ids)
     obs = pd.DataFrame(data={"obs_ids": obs_ids}, index=obs_ids)
 
     counts = sp.sparse.csr_matrix(counts)
-    adata = AnnData(counts,
-                    obs=obs,
-                    var=var,
-                    obsm={"spatial": coords},
-                    dtype=np.float32)
+    adata = AnnData(
+        counts, obs=obs, var=var, obsm={"spatial": coords}, dtype=np.float32
+    )
 
     return adata
