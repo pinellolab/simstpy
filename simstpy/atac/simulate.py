@@ -3,14 +3,16 @@
 import pandas as pd
 import numpy as np
 import scipy as sp
-from scipy.sparse import csr_matrix
+from anndata import AnnData
 
 
-def sim_data(df_spatial: pd.DataFrame=None, 
-             group_name: str = None,
-             n_unique_fragments: int=10000,
-             n_da_peaks: int=1000,
-             n_non_da_peaks: int=10000):
+def sim_data(
+    df_spatial: pd.DataFrame = None,
+    group_name: str = None,
+    n_da_peaks: int = 1000,
+    n_non_da_peaks: int = 10000,
+    library_id: str = "spatial",
+):
     """
     Generate simulation ATAC-seq data
 
@@ -40,17 +42,35 @@ def sim_data(df_spatial: pd.DataFrame=None,
 
         # generate DE factor from log-normal distribution
         _da_peaks = da_peaks.copy()
-        _da_peaks[da_peaks_idx] = _da_peaks[da_peaks_idx] * 4
+        _da_peaks[da_peaks_idx] = _da_peaks[da_peaks_idx] * 8
 
         peak_acc = np.concatenate((_da_peaks, non_da_peaks))
 
         peak_acc = peak_acc / np.sum(peak_acc)
         peak_acc = np.expand_dims(peak_acc, axis=0)
 
-        _lib_size = np.array([n_unique_fragments]*len(cell_ids))
+        _lib_size = np.random.poisson(lam=10000, size=len(cell_ids))
         _lib_size = np.expand_dims(_lib_size, axis=1)
         mat = np.matmul(_lib_size, peak_acc)
         accessibility = np.concatenate((accessibility, mat), axis=0)
 
-    # we then generate non SVGs
-    counts = np.random.binomial(accessibility)
+    # find the maximum value of each row
+    max_values = np.max(accessibility, axis=1)
+
+    # divide each row by its corresponding maximum value
+    res = accessibility / max_values[:, np.newaxis]
+
+    counts = np.random.binomial(n=1, p=res)
+    counts = sp.sparse.csr_matrix(counts)
+
+    var = [f"peak_{i}" for i in range(da_peaks + non_da_peaks)]
+    df_spatial = df_spatial.loc[all_cell_ids]
+    df_spatial["obs_ids"] = all_cell_ids
+
+    adata = AnnData(counts, dtype=np.float32, var=var)
+
+    adata.uns["spatial"] = {library_id: {}}
+    adata.obsm["spatial"] = adata.obs[["x", "y"]].values
+    adata.obs.drop(columns=["x", "y"], inplace=True)
+
+    return adata

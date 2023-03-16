@@ -26,7 +26,8 @@ dependencies = [
     "scipy",
     "scanpy",
     "squidpy",
-    "pandas"
+    "pandas",
+    "muon"
 ]
 
 [project.urls]
