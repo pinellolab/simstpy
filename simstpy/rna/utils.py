@@ -2,11 +2,36 @@
 
 import json
 import pandas as pd
+import numpy as np
 from pathlib import Path
 from anndata import AnnData
-
+from sklearn.gaussian_process.kernels import RBF
 from squidpy.read._utils import _load_image
 from squidpy._constants._pkg_constants import Key
+
+def get_cov_from_rbf_kernel(coords: np.array, length_scale: float=1.0) -> np.array:
+    """
+    Generate covariance matrix from RBF kernel
+
+    Parameters
+    ----------
+    coords : np.array
+        Spatial coordinates
+    length_scale : float, optional
+        Length scale for RBF, by default 1.0
+
+    Returns
+    -------
+    np.array
+        Covariance matrix
+    """
+
+    rbf = RBF(length_scale=length_scale)
+
+    cov = rbf(coords)
+
+    return cov
+
 
 def add_image_file_10x(adata: AnnData, library_id: str, image_path: str) -> AnnData:
     """

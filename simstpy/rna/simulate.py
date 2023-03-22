@@ -5,7 +5,6 @@ import pandas as pd
 import scipy as sp
 from scipy.sparse import csr_matrix
 from sklearn.preprocessing import normalize
-from sklearn.gaussian_process.kernels import RBF
 from anndata import AnnData
 
 
@@ -204,7 +203,10 @@ def sim_multi_group(
 
     return adata
 
-def sim_svgs(n_svgs=10, n_non_svgs=2, library_size=1e4, random_state=42):
+def sim_svgs(n_svgs=10, 
+             n_non_svgs=2, 
+             library_size=1e4, 
+             random_state=42):
     """
     Simulate gene expression with spatial correlation
 
