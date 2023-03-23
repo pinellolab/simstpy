@@ -3,9 +3,10 @@
 import numpy as np
 import pandas as pd
 import scipy as sp
+from anndata import AnnData
 from scipy.sparse import csr_matrix
 from sklearn.preprocessing import normalize
-from anndata import AnnData
+from sklearn.gaussian_process.kernels import RBF
 
 
 def sim_library_size(params: tuple, n_cells: int):
@@ -105,7 +106,7 @@ def sim_multi_group(
     group_name: str = None,
     library_id: str = "spatial",
     fold_change: str = "lognormal",
-    log_fc: float=1,
+    log_fc: float = 1,
     mean: float = 2,
     sigma: float = 0.5,
     min_fc: float = 2,
@@ -161,12 +162,14 @@ def sim_multi_group(
 
         # generate DE factor from log-normal distribution
         if fold_change == "lognormal":
-            de_ratio = np.random.lognormal(mean=mean, sigma=sigma, size=len(svgs_idx))
+            de_ratio = np.random.lognormal(
+                mean=mean, sigma=sigma, size=len(svgs_idx))
             de_ratio[de_ratio < 1] = 1 / de_ratio[de_ratio < 1]
         elif fold_change == "fixed":
             de_ratio = 2**log_fc
         elif fold_change == "step":
-            de_ratio = np.linspace(start=min_fc, stop=max_fc, num=len(svgs_idx))
+            de_ratio = np.linspace(
+                start=min_fc, stop=max_fc, num=len(svgs_idx))
 
         _svgs_exp = svgs_exp.copy()
         _svgs_exp[svgs_idx] = _svgs_exp[svgs_idx] * de_ratio
@@ -176,7 +179,8 @@ def sim_multi_group(
         exp = exp / np.sum(exp)
         exp = np.expand_dims(exp, axis=0)
 
-        _lib_size = lib_size[df_spatial[group_name].values == cell_group].copy()
+        _lib_size = lib_size[df_spatial[group_name].values ==
+                             cell_group].copy()
         _lib_size = np.expand_dims(_lib_size, axis=1)
 
         mat = np.matmul(_lib_size, exp)
@@ -190,7 +194,8 @@ def sim_multi_group(
         is_de_genes[i] = True
 
     gene_ids = [f"gene_{i}" for i in range(n_svgs + n_non_svgs)]
-    var = pd.DataFrame(data={"spatially_variable": is_de_genes}, index=gene_ids)
+    var = pd.DataFrame(
+        data={"spatially_variable": is_de_genes}, index=gene_ids)
 
     df_spatial = df_spatial.loc[all_cell_ids]
     df_spatial['obs_ids'] = all_cell_ids
@@ -203,11 +208,15 @@ def sim_multi_group(
 
     return adata
 
-def sim_svgs(n_svgs=10, 
-             n_non_svgs=2, 
-             library_size=1e4, 
-             random_state=42, 
+
+def sim_svgs(height: int = 50,
+             width: int = 50,
+             n_svgs=10,
+             n_non_svgs=2,
+             library_size=1e4,
+             random_state=42,
              sigma=1,
+             rbf_length_scales: list = None,
              sparsity=0.3) -> AnnData:
     """
     Simulate gene expression with spatial correlation
@@ -228,23 +237,31 @@ def sim_svgs(n_svgs=10,
     Anndata
         An anndata object inclduing simulated data
     """
-    x, y = np.meshgrid(np.arange(50), np.arange(50))
+    x, y = np.meshgrid(np.arange(height), np.arange(width))
 
     coords = np.column_stack((np.ndarray.flatten(x), np.ndarray.flatten(y)))
 
-    rbf1 = RBF(1)
-    rbf5 = RBF(5)
-    rbf10 = RBF(10)
-    rbf15 = RBF(15)
-
-    cov1 = rbf1(coords)
-    cov2 = rbf5(coords)
-    cov3 = rbf10(coords)
-    cov4 = rbf15(coords)
-
+    # we first sample data for SVGs
     np.random.seed(random_state)
-    svgs_counts = np.zeros((50 * 50, n_svgs))
+    svgs_exp = np.zeros((height * width, 0))
     sigma = sigma**2
+    for length_scale in rbf_length_scales:
+        cov = get_cov_from_rbf_kernel(length_scale)
+        exp = sp.stats.multivariate_normal.rvs(
+            mean=np.zeros(height*width), cov=sigma*cov
+        )
+        svgs_exp = np.vstack((svgs_exp, exp))
+
+    # generate non-SVGs
+    non_svgs_exp = np.zeros((height * width, n_non_svgs))
+    for i in range(n_non_svgs):
+        non_svgs_exp[:, i] = np.random.standard_normal(50**2) + sigma
+
+    exp = np.concatenate((svgs_exp, non_svgs_exp), axis=1)
+    exp = np.exp(exp)
+    exp = normalize(exp, axis=1, norm="l1")
+    exp = np.random.poisson(library_size * exp)
+
     # generate SVGs
     for i in range(n_svgs):
         proportion = np.random.dirichlet((0.25, 0.25, 0.25, 0.25))
@@ -285,3 +302,27 @@ def sim_svgs(n_svgs=10,
     )
 
     return adata
+
+
+def get_cov_from_rbf_kernel(coords: np.array,
+                            length_scale: float = 1.0) -> np.array:
+    """
+    Generate covariance matrix from RBF kernel
+
+    Parameters
+    ----------
+    coords : np.array
+        Spatial coordinates
+    length_scale : float, optional
+        Length scale for RBF, by default 1.0
+
+    Returns
+    -------
+    np.array
+        Covariance matrix
+    """
+
+    rbf = RBF(length_scale=length_scale)
+    cov = rbf(coords)
+
+    return cov
