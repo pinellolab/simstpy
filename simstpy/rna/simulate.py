@@ -206,25 +206,27 @@ def sim_multi_group(
 def sim_svgs(n_svgs=10, 
              n_non_svgs=2, 
              library_size=1e4, 
-             random_state=42):
+             random_state=42, 
+             sigma=1,
+             sparsity=0.3) -> AnnData:
     """
     Simulate gene expression with spatial correlation
 
     Parameters
     ----------
     n_svgs : int, optional
-        _description_, by default 10
+        Number of SVGs, by default 10
     n_non_svgs : int, optional
-        _description_, by default 2
+        Number of non-SVGs, by default 2
     library_size : _type_, optional
-        _description_, by default 1e4
+        Library size, by default 1e4
     random_state : int, optional
-        _description_, by default 42
+        Seed to generate random numbers, by default 42
 
     Returns
     -------
-    _type_
-        _description_
+    Anndata
+        An anndata object inclduing simulated data
     """
     x, y = np.meshgrid(np.arange(50), np.arange(50))
 
@@ -242,6 +244,7 @@ def sim_svgs(n_svgs=10,
 
     np.random.seed(random_state)
     svgs_counts = np.zeros((50 * 50, n_svgs))
+    sigma = sigma**2
     # generate SVGs
     for i in range(n_svgs):
         proportion = np.random.dirichlet((0.25, 0.25, 0.25, 0.25))
@@ -253,13 +256,13 @@ def sim_svgs(n_svgs=10,
         )
 
         svgs_counts[:, i] = sp.stats.multivariate_normal.rvs(
-            mean=np.zeros(50**2), cov=cov
+            mean=np.zeros(50**2), cov=sigma*cov
         )
 
     # generate non-SVGs
     non_svgs_counts = np.zeros((50 * 50, n_non_svgs))
     for i in range(n_non_svgs):
-        non_svgs_counts[:, i] = np.random.standard_normal(50**2)
+        non_svgs_counts[:, i] = np.random.standard_normal(50**2) + sigma
 
     counts = np.concatenate((svgs_counts, non_svgs_counts), axis=1)
     counts = np.exp(counts)
