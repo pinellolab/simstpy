@@ -86,7 +86,7 @@ def sim_svgs(
     n_svgs = svg_exp.shape[1]
 
     # add noise to simualted SVGs
-    noise = np.random.standard_normal(height * width, n_svgs) + sigma
+    noise = np.random.standard_normal(size=(height * width, n_svgs)) + sigma
     svg_exp = np.multiply(svg_exp, 1-alpha) + np.multiply(noise, alpha)
     
     # generate non-SVGs using White noise kernel
