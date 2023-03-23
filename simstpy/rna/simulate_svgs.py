@@ -6,13 +6,15 @@ import scipy as sp
 from anndata import AnnData
 from sklearn.preprocessing import normalize
 from sklearn.gaussian_process.kernels import RBF, ExpSineSquared
+from sklearn.datasets import make_spd_matrix
 from itertools import product
 
 
 def sim_svgs(
     height: int = 50,
     width: int = 50,
-    n_non_svgs=100,
+    n_non_svgs: int = 100,
+    alpha: float = 0.1,
     sigma: float = 1.0,
     library_size: int = 1e4,
     random_state: int = 32,
@@ -24,7 +26,6 @@ def sim_svgs(
     # set random seed and amplitude of the covariance
     np.random.seed(random_state)
     sigma = sigma**2
-    n_svgs = 0
 
     # generate SVGs using RBF kernel
     length_scales = np.linspace(start=1, stop=50, num=50)
@@ -42,7 +43,11 @@ def sim_svgs(
         sigma=sigma,
     )
 
-    n_svgs = rbf_svgs_exp.shape[1] + period_svgs_exp[1]
+    # generate SVGs using random covariane matrix
+    rand_svgs_exp = svgs_rand_covariance(coords=coords, n_svgs=20, sigma=sigma)
+    
+    # combine all SVGs
+    svg_exp = np.concatenate((rbf_svgs_exp, period_svgs_exp, rand_svgs_exp), axis=1)
 
     # generate non-SVGs using White noise kernel
     non_svgs_exp = np.zeros((height * width, n_non_svgs))
@@ -50,11 +55,12 @@ def sim_svgs(
         non_svgs_exp[:, i] = np.random.standard_normal(height * width) + sigma
 
     ## combine SVGs and non-SVGs, and convert the data to counts
-    exp = np.concatenate((rbf_svgs_exp, non_svgs_exp), axis=1)
+    exp = np.concatenate((svg_exp, non_svgs_exp), axis=1)
     exp = np.exp(exp)
     exp = normalize(exp, axis=1, norm="l1")
     counts = np.random.poisson(library_size * exp)
 
+    n_svgs = svg_exp.shape[1]
     is_de_genes = [False] * (n_svgs + n_non_svgs)
     for i in range(n_svgs):
         is_de_genes[i] = True
@@ -73,8 +79,43 @@ def sim_svgs(
     return adata
 
 
+def svgs_rand_covariance(
+    coords: np.array, 
+    n_svgs: int = 20, 
+    sigma: float = 1
+) -> np.array:
+    """
+    Generate spatially variable genes using random covariane matrix
+
+    Parameters
+    ----------
+    coords : np.array
+        Spatial coordinates
+    n_svgs : int, optional
+        Number of genes to generate, by default 10
+
+    Returns
+    -------
+    np.array
+        _description_
+    """
+    n_locations = coords.shape[0]
+    exp = np.zeros((n_locations, n_svgs))
+
+    for i in range(n_svgs):
+        cov = make_spd_matrix(n_dim=n_locations, random_state=i)
+
+        exp[:, i] = sp.stats.multivariate_normal.rvs(
+            mean=np.zeros(n_locations), cov=np.multiply(cov, sigma)
+        )
+
+    return exp
+
+
 def svgs_rbf_kernel(
-    coords: np.array, length_scales: list = None, sigma: float = 1
+    coords: np.array, 
+    length_scales: list = None, 
+    sigma: float = 1
 ) -> np.array:
     """
     Generate SVGs using RBF kernel
