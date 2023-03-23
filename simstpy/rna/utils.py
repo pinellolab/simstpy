@@ -86,3 +86,5 @@ def check_pos_semidefinite(cov: np.array) -> np.array:
     
     if min_eig < 0:
         cov -= 10*min_eig * np.eye(*cov.shape)
+        
+    return cov
