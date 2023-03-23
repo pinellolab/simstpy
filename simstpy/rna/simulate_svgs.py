@@ -146,8 +146,8 @@ def svgs_rand_covariance(
     for i in range(n_svgs):
         cov = make_spd_matrix(n_dim=n_locations, random_state=i)
         cov = np.multiply(cov, sigma)
-        exp[:, i] = rng.multivariate_normal(
-            mean=np.zeros(n_locations), cov=cov, method="cholesky"
+        exp[:, i] = sp.stats.multivariate_normal.rvs(
+            mean=np.zeros(n_locations), cov=cov
         )
 
     return exp
@@ -179,8 +179,8 @@ def svgs_rbf_kernel(
         cov = kernel(coords)
         cov = check_pos_semidefinite(cov=cov)
         cov = np.multiply(cov, sigma)
-        exp[:, i] = rng.multivariate_normal(
-            mean=np.zeros(n_locations), cov=cov, method="cholesky"
+        exp[:, i] = sp.stats.multivariate_normal.rvs(
+            mean=np.zeros(n_locations), cov=cov
         )
 
     return exp
@@ -225,8 +225,8 @@ def svgs_period_kernel(
         cov = kernel(coords)
         cov = check_pos_semidefinite(cov=cov)
         cov = np.multiply(cov, sigma)
-        exp[:, i] = rng.multivariate_normal(
-            mean=np.zeros(n_locations), cov=cov, method="cholesky"
+        exp[:, i] = sp.stats.multivariate_normal.rvs(
+            mean=np.zeros(n_locations), cov=cov
         )
 
     return exp
