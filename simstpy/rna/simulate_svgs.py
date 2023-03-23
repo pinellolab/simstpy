@@ -8,8 +8,10 @@ from sklearn.preprocessing import normalize
 from sklearn.gaussian_process.kernels import RBF, ExpSineSquared
 from sklearn.datasets import make_spd_matrix
 from itertools import product
+from numpy.random import default_rng
 
 from .utils import check_pos_semidefinite
+
 
 def sim_svgs(
     height: int = 50,
@@ -59,7 +61,7 @@ def sim_svgs(
     coords = np.column_stack((np.ndarray.flatten(x), np.ndarray.flatten(y)))
 
     # set random seed and amplitude of the covariance
-    np.random.seed(random_state)
+    rng = default_rng(random_state)
     sigma = sigma**2
 
     # generate SVGs using RBF kernel
@@ -80,19 +82,19 @@ def sim_svgs(
 
     # generate SVGs using random covariane matrix
     rand_svgs_exp = svgs_rand_covariance(coords=coords, n_svgs=n_rand_svgs, sigma=sigma)
-    
+
     # combine all SVGs
     svg_exp = np.concatenate((rbf_svgs_exp, period_svgs_exp, rand_svgs_exp), axis=1)
     n_svgs = svg_exp.shape[1]
 
     # add noise to simualted SVGs
-    noise = np.random.standard_normal(size=(height * width, n_svgs)) + sigma
-    svg_exp = np.multiply(svg_exp, 1-alpha) + np.multiply(noise, alpha)
-    
+    noise = rng.standard_normal(size=(height * width, n_svgs)) + sigma
+    svg_exp = np.multiply(svg_exp, 1 - alpha) + np.multiply(noise, alpha)
+
     # generate non-SVGs using White noise kernel
     non_svgs_exp = np.zeros((height * width, n_non_svgs))
     for i in range(n_non_svgs):
-        non_svgs_exp[:, i] = np.random.standard_normal(height * width) + sigma
+        non_svgs_exp[:, i] = rng.standard_normal(height * width) + sigma
 
     ## combine SVGs and non-SVGs, and convert the data to counts
     exp = np.concatenate((svg_exp, non_svgs_exp), axis=1)
@@ -100,7 +102,6 @@ def sim_svgs(
     exp = normalize(exp, axis=1, norm="l1")
     counts = np.random.poisson(library_size * exp)
 
-    
     is_de_genes = [False] * (n_svgs + n_non_svgs)
     for i in range(n_svgs):
         is_de_genes[i] = True
@@ -120,9 +121,7 @@ def sim_svgs(
 
 
 def svgs_rand_covariance(
-    coords: np.array, 
-    n_svgs: int = 20, 
-    sigma: float = 1
+    coords: np.array, n_svgs: int = 20, sigma: float = 1, random_state: int = 42
 ) -> np.array:
     """
     Generate spatially variable genes using random covariane matrix
@@ -139,23 +138,24 @@ def svgs_rand_covariance(
     np.array
         _description_
     """
+    rng = default_rng(random_state)
+
     n_locations = coords.shape[0]
     exp = np.zeros((n_locations, n_svgs))
 
     for i in range(n_svgs):
         cov = make_spd_matrix(n_dim=n_locations, random_state=i)
         cov = np.multiply(cov, sigma)
-        exp[:, i] = sp.stats.multivariate_normal.rvs(
-            mean=np.zeros(n_locations), cov=cov
-        )
+        exp[:, i] = rng.multivariate_normal(mean=np.zeros(n_locations), cov=cov)
 
     return exp
 
 
 def svgs_rbf_kernel(
-    coords: np.array, 
-    length_scales: list = None, 
-    sigma: float = 1
+    coords: np.array,
+    length_scales: list = None,
+    sigma: float = 1,
+    random_state: int = 42,
 ) -> np.array:
     """
     Generate SVGs using RBF kernel
@@ -167,20 +167,17 @@ def svgs_rbf_kernel(
     length_scales : list, optional
         Length scales, by default None
     """
+    rng = default_rng(random_state)
 
     n_locations = coords.shape[0]
     exp = np.zeros((n_locations, len(length_scales)))
 
     for i, length_scale in enumerate(length_scales):
         kernel = RBF(length_scale=length_scale)
-        
         cov = kernel(coords)
         cov = check_pos_semidefinite(cov=cov)
         cov = np.multiply(cov, sigma)
-        
-        exp[:, i] = sp.stats.multivariate_normal.rvs(
-            mean=np.zeros(n_locations), cov=cov
-        )
+        exp[:, i] = rng.multivariate_normal(mean=np.zeros(n_locations), cov=cov)
 
     return exp
 
@@ -190,6 +187,7 @@ def svgs_period_kernel(
     length_scales: list = None,
     periodicities: list = None,
     sigma: float = 1,
+    random_state: int = 42,
 ) -> np.array:
     """
     Generate spatially variable genes using period kernel
@@ -210,7 +208,7 @@ def svgs_period_kernel(
     np.array
         _description_
     """
-
+    rng = default_rng(random_state)
     n_locations = coords.shape[0]
 
     length_scale_periods = list(product(length_scales, periodicities))
@@ -220,13 +218,9 @@ def svgs_period_kernel(
         kernel = ExpSineSquared(
             length_scale=length_scale_period[0], periodicity=length_scale_period[1]
         )
-        
         cov = kernel(coords)
         cov = check_pos_semidefinite(cov=cov)
         cov = np.multiply(cov, sigma)
-        
-        exp[:, i] = sp.stats.multivariate_normal.rvs(
-            mean=np.zeros(n_locations), cov=cov
-        )
+        exp[:, i] = rng.multivariate_normal(mean=np.zeros(n_locations), cov=cov)
 
     return exp
