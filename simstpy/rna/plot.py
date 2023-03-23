@@ -2,10 +2,8 @@
 
 import numpy as np
 import scipy as sp
-import pandas as pd
 from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 def plot_library_size(data: csr_matrix, params: tuple):
