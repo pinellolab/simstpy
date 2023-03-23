@@ -9,6 +9,7 @@ from sklearn.gaussian_process.kernels import RBF, ExpSineSquared
 from sklearn.datasets import make_spd_matrix
 from itertools import product
 
+from .utils import check_pos_semidefinite
 
 def sim_svgs(
     height: int = 50,
@@ -172,8 +173,11 @@ def svgs_rbf_kernel(
 
     for i, length_scale in enumerate(length_scales):
         kernel = RBF(length_scale=length_scale)
+        
         cov = kernel(coords)
+        cov = check_pos_semidefinite(cov=cov)
         cov = np.multiply(cov, sigma)
+        
         exp[:, i] = sp.stats.multivariate_normal.rvs(
             mean=np.zeros(n_locations), cov=cov
         )
@@ -216,9 +220,11 @@ def svgs_period_kernel(
         kernel = ExpSineSquared(
             length_scale=length_scale_period[0], periodicity=length_scale_period[1]
         )
-
+        
         cov = kernel(coords)
+        cov = check_pos_semidefinite(cov=cov)
         cov = np.multiply(cov, sigma)
+        
         exp[:, i] = sp.stats.multivariate_normal.rvs(
             mean=np.zeros(n_locations), cov=cov
         )

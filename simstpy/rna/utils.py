@@ -2,6 +2,7 @@
 
 import json
 import pandas as pd
+import numpy as np
 from pathlib import Path
 from anndata import AnnData
 from squidpy.read._utils import _load_image
@@ -62,3 +63,26 @@ def add_image_file_10x(adata: AnnData, library_id: str, image_path: str) -> AnnD
                    "pxl_col_in_fullres"], inplace=True)
 
     return adata
+
+
+def check_pos_semidefinite(cov: np.array) -> np.array:
+    """
+    Check if the generated covariance is positive and semidefinite
+
+    Ref: https://stackoverflow.com/questions/41515522/numpy-positive-semi-definite-warning
+    
+    Parameters
+    ----------
+    cov : np.array
+        Input covariance matrix
+
+    Returns
+    -------
+    np.array
+        Returned matrix
+    """
+    
+    min_eig = np.min(np.real(np.linalg.eigvals(cov)))
+    
+    if min_eig < 0:
+        cov -= 10*min_eig * np.eye(*cov.shape)
