@@ -49,7 +49,7 @@ def sim_svgs(
     for i in range(n_non_svgs):
         non_svgs_exp[:, i] = np.random.standard_normal(height * width) + sigma
 
-    ## combine SVGs and non-SVGs
+    ## combine SVGs and non-SVGs, and convert the data to counts
     exp = np.concatenate((rbf_svgs_exp, non_svgs_exp), axis=1)
     exp = np.exp(exp)
     exp = normalize(exp, axis=1, norm="l1")
