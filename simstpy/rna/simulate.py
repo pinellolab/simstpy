@@ -6,7 +6,7 @@ import scipy as sp
 from anndata import AnnData
 from scipy.sparse import csr_matrix
 from sklearn.preprocessing import normalize
-from sklearn.gaussian_process.kernels import RBF
+from sklearn.gaussian_process.kernels import RBF, ExpSineSquared
 
 
 def sim_library_size(params: tuple, n_cells: int):
@@ -212,7 +212,7 @@ def sim_multi_group(
 def sim_svgs(height: int = 50,
              width: int = 50,
              n_svgs=10,
-             n_non_svgs=2,
+             n_non_svgs=100,
              library_size=1e4,
              random_state=42,
              sigma=1,
@@ -241,51 +241,44 @@ def sim_svgs(height: int = 50,
 
     coords = np.column_stack((np.ndarray.flatten(x), np.ndarray.flatten(y)))
 
-    # we first sample data for SVGs
+    # generate data for SVGs
     np.random.seed(random_state)
-    svgs_exp = np.zeros((height * width, 0))
     sigma = sigma**2
-    for length_scale in rbf_length_scales:
-        cov = get_cov_from_rbf_kernel(length_scale)
-        exp = sp.stats.multivariate_normal.rvs(
-            mean=np.zeros(height*width), cov=sigma*cov
-        )
-        svgs_exp = np.vstack((svgs_exp, exp))
-
+    
+    # using RBF kernel with different length scale
+    rbf_len_scales = np.linspace(start=1, stop=50, num=50)
+    rbf_svgs_exp = np.zeros((height * width, len(rbf_length_scales)))
+    for length_scale in rbf_len_scales:
+        cov = get_cov_from_rbf_kernel(coords, length_scale)
+        rbf_svgs_exp[:, i] = sp.stats.multivariate_normal.rvs(
+            mean=np.zeros(height*width), 
+            cov=sigma*cov)
+    
+    # using Periodic kernel
+    len_scales = np.linspace(start=1, stop=10, num=10)
+    periods = np.linspace(start=1, stop=10, num=10)
+    len_periods = list(product(len_scales, periods))
+    
+    period_svgs_exp = np.zeros((height * width, len(len_periods))
+    
+    
+    
     # generate non-SVGs
     non_svgs_exp = np.zeros((height * width, n_non_svgs))
     for i in range(n_non_svgs):
-        non_svgs_exp[:, i] = np.random.standard_normal(50**2) + sigma
+        non_svgs_exp[:, i] = np.random.standard_normal(height*width) + sigma
 
     exp = np.concatenate((svgs_exp, non_svgs_exp), axis=1)
     exp = np.exp(exp)
     exp = normalize(exp, axis=1, norm="l1")
     exp = np.random.poisson(library_size * exp)
 
-    # generate SVGs
-    for i in range(n_svgs):
-        proportion = np.random.dirichlet((0.25, 0.25, 0.25, 0.25))
-        cov = (
-            proportion[0] * cov1
-            + proportion[1] * cov2
-            + proportion[2] * cov3
-            + proportion[3] * cov4
-        )
-
-        svgs_counts[:, i] = sp.stats.multivariate_normal.rvs(
-            mean=np.zeros(50**2), cov=sigma*cov
-        )
-
-    # generate non-SVGs
-    non_svgs_counts = np.zeros((50 * 50, n_non_svgs))
-    for i in range(n_non_svgs):
-        non_svgs_counts[:, i] = np.random.standard_normal(50**2) + sigma
-
     counts = np.concatenate((svgs_counts, non_svgs_counts), axis=1)
     counts = np.exp(counts)
     counts = normalize(counts, axis=1, norm="l1")
     counts = np.random.poisson(library_size * counts)
 
+    _ , n_svgs = svgs_exp.shape
     is_de_genes = [False] * (n_svgs + n_non_svgs)
     for i in range(n_svgs):
         is_de_genes[i] = True
@@ -322,7 +315,16 @@ def get_cov_from_rbf_kernel(coords: np.array,
         Covariance matrix
     """
 
-    rbf = RBF(length_scale=length_scale)
-    cov = rbf(coords)
+    kernel = RBF(length_scale=length_scale)
+    cov = kernel(coords)
+
+    return cov
+
+def get_cov_from_period_kernel(coords: np.array,
+                              length_scale: float = 1.0,
+                              periodicity: float = 1.0) -> np.array:
+    
+    kernel = ExpSineSquared(length_scale=length_scale, periodicity=periodicity)
+    cov = kernel(coords)
 
     return cov
