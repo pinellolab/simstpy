@@ -71,8 +71,8 @@ def sim_svgs(
     )
 
     # generate SVGs using periodic kernel
-    length_scales = np.linspace(start=1, stop=10, num=10)
-    periodicities = np.linspace(start=1, stop=10, num=10)
+    length_scales = np.linspace(start=25, stop=50, num=10)
+    periodicities = np.linspace(start=1, stop=50, num=10)
     period_svgs_exp = svgs_period_kernel(
         coords=coords,
         length_scales=length_scales,
@@ -91,7 +91,7 @@ def sim_svgs(
     noise = rng.standard_normal(size=(height * width, n_svgs)) + sigma
     svg_exp = np.multiply(svg_exp, 1 - alpha) + np.multiply(noise, alpha)
 
-    # generate non-SVGs using White noise kernel
+    # generate non-SVGs using white noise kernel
     non_svgs_exp = np.zeros((height * width, n_non_svgs))
     for i in range(n_non_svgs):
         non_svgs_exp[:, i] = rng.standard_normal(height * width) + sigma
@@ -121,7 +121,7 @@ def sim_svgs(
 
 
 def svgs_rand_covariance(
-    coords: np.array, n_svgs: int = 20, sigma: float = 1, random_state: int = 42
+    coords: np.array, n_svgs: int = 20, sigma: float = 1
 ) -> np.array:
     """
     Generate spatially variable genes using random covariane matrix
@@ -138,8 +138,6 @@ def svgs_rand_covariance(
     np.array
         _description_
     """
-    rng = default_rng(random_state)
-
     n_locations = coords.shape[0]
     exp = np.zeros((n_locations, n_svgs))
 
@@ -156,8 +154,7 @@ def svgs_rand_covariance(
 def svgs_rbf_kernel(
     coords: np.array,
     length_scales: list = None,
-    sigma: float = 1,
-    random_state: int = 42,
+    sigma: float = 1
 ) -> np.array:
     """
     Generate SVGs using RBF kernel
@@ -169,8 +166,6 @@ def svgs_rbf_kernel(
     length_scales : list, optional
         Length scales, by default None
     """
-    rng = default_rng(random_state)
-
     n_locations = coords.shape[0]
     exp = np.zeros((n_locations, len(length_scales)))
 
@@ -190,8 +185,7 @@ def svgs_period_kernel(
     coords: np.array,
     length_scales: list = None,
     periodicities: list = None,
-    sigma: float = 1,
-    random_state: int = 42,
+    sigma: float = 1
 ) -> np.array:
     """
     Generate spatially variable genes using period kernel
@@ -212,7 +206,6 @@ def svgs_period_kernel(
     np.array
         _description_
     """
-    rng = default_rng(random_state)
     n_locations = coords.shape[0]
 
     length_scale_periods = list(product(length_scales, periodicities))
