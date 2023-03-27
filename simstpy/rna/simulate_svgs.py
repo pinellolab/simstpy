@@ -73,11 +73,11 @@ def sim_svgs(
     # get random proportion
     svg_exp = np.zeros((n_locations, n_svgs))
     for i in range(n_svgs):
-        alpha = rng.dirichlet(alpha=1.0 / np.ones(n_kernels))
+        proportion = rng.dirichlet(alpha=1.0 / np.ones(n_kernels))
 
         _cov = np.zeros((n_locations, n_locations))
         for j in range(n_kernels):
-            _cov += np.multiply(cov[j], sigma * alpha[j])
+            _cov += np.multiply(cov[j], sigma * proportion[j])
 
         svg_exp[:, i] = sp.stats.multivariate_normal.rvs(
             mean=np.zeros(n_locations), cov=_cov
