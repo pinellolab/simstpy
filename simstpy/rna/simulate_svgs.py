@@ -56,12 +56,11 @@ def sim_svgs(
         _description_
     """
 
+    rng = default_rng(random_state)
+
     n_locations = height * width
     x, y = np.meshgrid(np.arange(height), np.arange(width))
     coords = np.column_stack((np.ndarray.flatten(x), np.ndarray.flatten(y)))
-
-    # set random seed and amplitude of the covariance
-    rng = default_rng(random_state)
     sigma = sigma**2
 
     # generate SVGs using RBF kernel
