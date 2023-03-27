@@ -66,22 +66,21 @@ def sim_svgs(
 
     # generate SVGs using RBF kernel
     length_scales = np.linspace(start=1, stop=10, num=n_kernels)
-    cov_list = list()
-    for length_scale in length_scales:
-        cov = get_cov_from_rbf(coords=coords, length_scale=length_scale)
-        cov_list = cov_list.append(cov)
+    cov = np.zeros((n_kernels, n_locations, n_locations))
+    for i, length_scale in enumerate(length_scales):
+        cov[i] = get_cov_from_rbf(coords=coords, length_scale=length_scale)
 
     # get random proportion
     svg_exp = np.zeros((n_locations, n_svgs))
     for i in range(n_svgs):
         alpha = rng.dirichlet(alpha=1.0 / np.ones(n_kernels))
 
-        cov = np.zeros((n_locations, n_locations))
+        _cov = np.zeros((n_locations, n_locations))
         for j in range(n_kernels):
-            cov += np.multiply(cov_list[j], sigma * alpha[j])
+            _cov += np.multiply(cov[j], sigma * alpha[j])
 
         svg_exp[:, i] = sp.stats.multivariate_normal.rvs(
-            mean=np.zeros(n_locations), cov=cov
+            mean=np.zeros(n_locations), cov=_cov
         )
 
     # add noise to simualted SVGs
