@@ -78,9 +78,7 @@ def sim_svgs(
         for j in range(n_kernels):
             _cov += np.multiply(cov[j], sigma * proportion[j])
 
-        svg_exp[:, i] = sp.stats.multivariate_normal.rvs(
-            mean=np.zeros(n_locations), cov=_cov
-        )
+        svg_exp[:, i] = rng.multivariate_normal(mean=np.zeros(n_locations), cov=_cov)
 
     # add noise to simualted SVGs
     noise = rng.standard_normal(size=(n_locations, n_svgs)) + sigma
