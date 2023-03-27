@@ -19,7 +19,7 @@ def sim_svgs(
     n_svgs: int = 50,
     n_non_svgs: int = 100,
     n_kernels: int = 5,
-    alpha: float = 0.1,
+    alpha: float = 0.0,
     sigma: float = 1.0,
     library_size: int = 1e4,
     random_state: int = 42,
@@ -95,7 +95,7 @@ def sim_svgs(
     exp = np.concatenate((svg_exp, non_svgs_exp), axis=1)
     exp = np.exp(exp)
     exp = normalize(exp, axis=1, norm="l1")
-    counts = np.random.poisson(library_size * exp)
+    counts = rng.poisson(library_size * exp)
 
     is_de_genes = [False] * (n_svgs + n_non_svgs)
     for i in range(n_svgs):
