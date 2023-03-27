@@ -69,7 +69,7 @@ def sim_svgs(
     cov_list = list()
     for length_scale in length_scales:
         cov = get_cov_from_rbf(coords=coords, length_scale=length_scale)
-        cov_list = np.append(cov)
+        cov_list = cov_list.append(cov)
 
     # get random proportion
     svg_exp = np.zeros((n_locations, n_svgs))
