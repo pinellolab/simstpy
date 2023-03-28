@@ -61,8 +61,7 @@ def sim_svgs(
     n_locations = height * width
     x, y = np.meshgrid(np.arange(height), np.arange(width))
     coords = np.column_stack((np.ndarray.flatten(x), np.ndarray.flatten(y)))
-    # sigma = sigma**2
-
+    
     # generate SVGs using RBF kernel
     length_scales = np.linspace(start=1, stop=10, num=n_kernels)
     cov = np.zeros((n_kernels, n_locations, n_locations))
@@ -76,7 +75,7 @@ def sim_svgs(
 
         _cov = np.zeros((n_locations, n_locations))
         for j in range(n_kernels):
-            _cov += np.multiply(cov[j], sigma * proportion[j])
+            _cov += np.multiply(cov[j], sigma * sigma * proportion[j])
 
         svg_exp[:, i] = rng.multivariate_normal(mean=np.zeros(n_locations), cov=_cov)
 
