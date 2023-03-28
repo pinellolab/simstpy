@@ -61,7 +61,7 @@ def sim_svgs(
     n_locations = height * width
     x, y = np.meshgrid(np.arange(height), np.arange(width))
     coords = np.column_stack((np.ndarray.flatten(x), np.ndarray.flatten(y)))
-    sigma = sigma**2
+    # sigma = sigma**2
 
     # generate SVGs using RBF kernel
     length_scales = np.linspace(start=1, stop=10, num=n_kernels)
