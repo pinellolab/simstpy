@@ -75,12 +75,13 @@ def sim_svgs(
 
         _cov = np.zeros((n_locations, n_locations))
         for j in range(n_kernels):
-            _cov += np.multiply(cov[j], sigma * sigma * proportion[j])
+            _cov += np.multiply(cov[j], proportion[j])
 
         svg_exp[:, i] = rng.multivariate_normal(mean=np.zeros(n_locations), cov=_cov)
+        svg_exp[:, i] = np.multiply(svg_exp[:, i], sigma)
 
     # add noise to simualted SVGs
-    noise = np.multiply(rng.standard_normal(size=(n_locations, n_svgs)), sigma)
+    noise = np.multiply(rng.standard_normal(size=(n_locations, n_svgs)))
     svg_exp = np.multiply(svg_exp, 1 - alpha) + np.multiply(noise, alpha)
 
     # generate non-SVGs using white noise kernel
