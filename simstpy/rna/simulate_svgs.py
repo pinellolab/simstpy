@@ -87,8 +87,8 @@ def sim_svgs(
     # generate non-SVGs using white noise kernel
     non_svgs_exp = np.zeros((n_locations, n_non_svgs))
     for i in range(n_non_svgs):
-        # non_svgs_exp[:, i] = np.multiply(rng.standard_normal(n_locations), sigma)
-        non_svgs_exp[:, i] = rng.standard_normal(n_locations)
+        non_svgs_exp[:, i] = np.multiply(rng.standard_normal(n_locations), sigma)
+        #non_svgs_exp[:, i] = rng.standard_normal(n_locations)
 
     ## combine SVGs and non-SVGs, and convert the data to counts
     exp = np.concatenate((svg_exp, non_svgs_exp), axis=1)
