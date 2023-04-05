@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "simstpy"
-version = "0.0.2"
+version = "0.0.3"
 description = "Simulating spatially-resolved omics data using python"
 authors = [
     {name = "Zhijian Li", email = "lzj1769@gmail.com"}
