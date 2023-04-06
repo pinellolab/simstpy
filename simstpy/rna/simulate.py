@@ -187,7 +187,7 @@ def sim_multi_group(
         expression = np.concatenate((expression, mat), axis=0)
 
     # we then generate non SVGs
-    counts = np.random.poisson(expression) + 1
+    counts = np.random.poisson(expression)
 
     is_de_genes = [False] * (n_svgs + n_non_svgs)
     for i in range(n_svgs):
