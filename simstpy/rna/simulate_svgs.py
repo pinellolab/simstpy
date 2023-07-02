@@ -21,6 +21,7 @@ def sim_svgs(
     n_kernels: int = 5,
     alpha: float = 0.0,
     sigma: float = 1.0,
+    mean_expression: float = 0,
     library_size: int = 1e4,
     random_state: int = 42,
 ) -> AnnData:
@@ -53,7 +54,7 @@ def sim_svgs(
     Returns
     -------
     AnnData
-        _description_
+        An anndata object containing simulated SVGs and non-SVGs
     """
 
     rng = default_rng(random_state)
@@ -88,7 +89,6 @@ def sim_svgs(
     non_svgs_exp = np.zeros((n_locations, n_non_svgs))
     for i in range(n_non_svgs):
         non_svgs_exp[:, i] = np.multiply(rng.standard_normal(n_locations), sigma)
-        #non_svgs_exp[:, i] = rng.standard_normal(n_locations)
 
     ## combine SVGs and non-SVGs, and convert the data to counts
     exp = np.concatenate((svg_exp, non_svgs_exp), axis=1)
