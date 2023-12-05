@@ -8,9 +8,11 @@ Simulation of spatially-resolved omics data in python
 
 # Installation
 
-The quickest and easiest way to get simstpy is to to use pip:
+You can clone the repo. and install it by
 
 ```shell
-pip install simstpy
+git clone git@github.com:pinellolab/simstpy.git
+cd simstpy
+pip install ./
 ```
 
