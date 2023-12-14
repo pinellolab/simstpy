@@ -12,6 +12,9 @@ cd simstpy
 pip install ./
 ```
 
-# Demo
+# Examples
+
+We provide a notebook to demonstrate how to generate simulate data based on [covariance](https://github.com/pinellolab/simstpy/blob/main/notebooks/01_simulation_with_covariance.ipynb).
+
 
 
