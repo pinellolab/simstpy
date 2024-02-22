@@ -101,6 +101,10 @@ def sim_svgs(
         is_de_genes[i] = True
 
     var_ids = [f"gene_{i}" for i in range(n_svgs + n_non_svgs)]
+    # svg_ids = [f"svg_{i}" for i in range(n_svgs)]
+    # non_svg_ids = [f"non_svg_{i}" for i in range(n_svgs)]
+    # var_ids = svg_ids + non_svg_ids
+    
     obs_ids = [f"loc_{i}" for i in range(height * width)]
 
     var = pd.DataFrame(data={"spatially_variable": is_de_genes}, index=var_ids)
